@@ -1,25 +1,40 @@
-// src/reducers/todoReducer.ts
-import { TodoAction, TodoActionTypes } from "../actions/todoActions";
+import { TodoActionTypes} from '../actions/todoActionTypes';
+import {  Todo } from '../components/Todo';
 
-interface Todo {
-  id: number;
-  text: string;
+interface TodoState {
+  todos: Todo[];
 }
 
-const initialState: Todo[] = [];
+const initialState: TodoState = {
+  todos: [],
+};
 
-const todoReducer = (state = initialState, action: TodoAction): Todo[] => {
+const todoReducer = (state = initialState, action: TodoActionTypes): TodoState => {
   switch (action.type) {
-    case TodoActionTypes.ADD_TODO:
-      return [...state, { id: action.payload.id, text: action.payload.text }];
-    case TodoActionTypes.DELETE_TODO:
-      return state.filter((todo) => todo.id !== action.payload.id);
-    case TodoActionTypes.EDIT_TODO:
-      return state.map((todo) =>
-        todo.id === action.payload.id
-          ? { ...todo, text: action.payload.newText }
-          : todo
-      );
+    case 'ADD_TODO':
+      return {
+        ...state,
+        todos: [...state.todos, action.payload],
+      };
+    case 'EDIT_TODO':
+      return {
+        ...state,
+        todos: state.todos.map(todo =>
+          todo.id === action.payload.id ? { ...todo, text: action.payload.newText } : todo
+        ),
+      };
+    case 'DELETE_TODO':
+      return {
+        ...state,
+        todos: state.todos.filter(todo => todo.id !== action.payload),
+      };
+    case 'TOGGLE_TODO':
+      return {
+        ...state,
+        todos: state.todos.map(todo =>
+          todo.id === action.payload ? { ...todo, completed: !todo.completed } : todo
+        ),
+      };
     default:
       return state;
   }

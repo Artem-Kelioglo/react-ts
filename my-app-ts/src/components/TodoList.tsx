@@ -1,12 +1,20 @@
+// TodoList.tsx
 import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../store';
-import { addTodo, deleteTodo, editTodo } from '../actions/todoActions';
+import { connect } from 'react-redux';
+import { RootState } from '../store/store';
+import { Todo } from '../components/Todo';
+import { addTodo, deleteTodo, editTodo, toggleTodo } from '../actions/todoActions';
 
-const TodoList: React.FC = () => {
-  const todos = useSelector((state: RootState) => state);
-  const dispatch = useDispatch();
-  const [inputText, setInputText] = useState<string>('');
+interface TodoListProps {
+  todos: Todo[];
+  addTodo: (text: string) => void;
+  deleteTodo: (id: number) => void;
+  editTodo: (id: number, newText: string) => void;
+  toggleTodo: (id: number) => void;
+}
+
+const TodoList: React.FC<TodoListProps> = ({ todos, addTodo, deleteTodo, editTodo, toggleTodo }) => {
+  const [inputText, setInputText] = useState('');
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setInputText(event.target.value);
@@ -14,38 +22,30 @@ const TodoList: React.FC = () => {
 
   const handleAddTodo = () => {
     if (inputText.trim() !== '') {
-      dispatch(addTodo(Date.now(), inputText));
+      addTodo(inputText);
       setInputText('');
     }
   };
 
-  const handleDeleteTodo = (id: number) => {
-    dispatch(deleteTodo(id));
-  };
-
-  const handleEditTodo = (id: number, newText: string) => {
-    dispatch(editTodo(id, newText));
-  };
-
   return (
     <div>
-      <h1>Todo List</h1>
-      <input
-        type="text"
-        value={inputText}
-        onChange={handleInputChange}
-        placeholder="Enter todo..."
-      />
+      <input type="text" value={inputText} onChange={handleInputChange} />
       <button onClick={handleAddTodo}>Add Todo</button>
       <ul>
         {todos.map(todo => (
           <li key={todo.id}>
+            <span style={{ textDecoration: todo.completed ? 'line-through' : 'none' }}>
+              {todo.text}
+            </span>
+            <button onClick={() => editTodo(todo.id, prompt('Enter new text') || todo.text)}>
+              Edit
+            </button>
+            <button onClick={() => deleteTodo(todo.id)}>Delete</button>
             <input
-              type="text"
-              value={todo.text}
-              onChange={(e) => handleEditTodo(todo.id, e.target.value)}
+              type="checkbox"
+              checked={todo.completed}
+              onChange={() => toggleTodo(todo.id)}
             />
-            <button onClick={() => handleDeleteTodo(todo.id)}>Delete</button>
           </li>
         ))}
       </ul>
@@ -53,4 +53,8 @@ const TodoList: React.FC = () => {
   );
 };
 
-export default TodoList;
+const mapStateToProps = (state: RootState) => ({
+  todos: state.todo.todos,
+});
+
+export default connect(mapStateToProps, { addTodo, deleteTodo, editTodo, toggleTodo })(TodoList);
